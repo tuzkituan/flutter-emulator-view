@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { TrackDevicesParser, parseDeviceLines, parseEmuAvdName, parseForwardPort, parseScrcpyVersion } from '../src/adbProtocol';
+import {
+  TrackDevicesParser,
+  isEmulatorCommandFor,
+  parseDeviceLines,
+  parseEmuAvdName,
+  parseForwardPort,
+  parseScrcpyVersion,
+} from '../src/adbProtocol';
 import { avcCodecString } from '../src/h264';
 import { KeyLike, keyIntent } from '../webview/keys';
 
@@ -37,6 +44,21 @@ describe('adb output', () => {
     expect(() => parseForwardPort('error: closed')).toThrow();
     expect(parseScrcpyVersion('scrcpy 3.3.4 <https://github.com/Genymobile/scrcpy>\n\nDependencies (compiled / linked):\n')).toBe('3.3.4');
     expect(parseEmuAvdName('Pixel_7\r\nOK\r\n')).toBe('Pixel_7');
+  });
+});
+
+describe('isEmulatorCommandFor', () => {
+  it('matches the launcher and its qemu child for the same AVD', () => {
+    expect(isEmulatorCommandFor('/home/u/Android/Sdk/emulator/emulator -avd Pixel_7 -no-window', 'Pixel_7')).toBe(true);
+    expect(isEmulatorCommandFor('/home/u/Android/Sdk/emulator/qemu/linux-x86_64/qemu-system-x86_64-headless -avd Pixel_7 -no-window', 'Pixel_7')).toBe(true);
+    expect(isEmulatorCommandFor('emulator -avd Pixel_7', 'Pixel_7')).toBe(true);
+  });
+
+  it('rejects a reused pid or another AVD', () => {
+    expect(isEmulatorCommandFor('/usr/bin/node server.js', 'Pixel_7')).toBe(false);
+    expect(isEmulatorCommandFor('/usr/bin/vim notes-avd Pixel_7', 'Pixel_7')).toBe(false);
+    expect(isEmulatorCommandFor('/opt/sdk/emulator/emulator -avd Pixel_7_Pro', 'Pixel_7')).toBe(false);
+    expect(isEmulatorCommandFor('', 'Pixel_7')).toBe(false);
   });
 });
 

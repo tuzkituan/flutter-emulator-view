@@ -67,3 +67,15 @@ export function parseEmuAvdName(stdout: string): string | undefined {
     .find((l) => l.length > 0 && l !== 'OK');
   return line;
 }
+
+/**
+ * True when a `ps -o command=` line is an emulator (the launcher or its qemu child) running
+ * [avd], so a stored pid is only trusted while it still points at that emulator.
+ */
+export function isEmulatorCommandFor(command: string, avd: string): boolean {
+  const args = command.trim().split(/\s+/);
+  const program = args[0] ?? '';
+  if (!/(^|\/)(emulator|qemu-system-[^/]*)$/.test(program) && !program.includes('/emulator/')) return false;
+  const i = args.indexOf('-avd');
+  return i >= 0 && args[i + 1] === avd;
+}

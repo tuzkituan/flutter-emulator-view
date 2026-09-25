@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Device, DeviceTracker, deviceLabel } from './adb';
 import { Recording, captureScreenshot, saveScreenshot } from './capture';
-import { killEmulator, launchAvd, listAvds, waitForBoot } from './emulator';
+import { EmulatorOwner, killEmulator, listAvds, waitForBoot } from './emulator';
 import { FlutterSessions, runFlutterAction, runFlutterApp } from './flutter';
 import { DeviceSummary, FramePoint, HostMessage, NavKey, ToolbarAction, ViewStatus, WebviewMessage } from './messages';
 import {
@@ -51,6 +51,7 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
   constructor(
     private readonly context: vscode.ExtensionContext,
     private readonly tracker: DeviceTracker,
+    private readonly emulators: EmulatorOwner,
     private readonly flutter: FlutterSessions,
     private readonly log: vscode.OutputChannel,
   ) {
@@ -398,9 +399,18 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
       const running = this.tracker.devices.find((d) => d.avd === avd);
       items.push({ label: avd.replace(/_/g, ' '), kind: vscode.QuickPickItemKind.Separator });
       if (running) {
+        const owned = this.emulators.owns(avd);
         items.push(
           { label: '$(eye) Mirror', description: running.serial, run: () => this.selectDevice(running.serial) },
-          { label: '$(debug-stop) Stop', description: running.serial, run: () => killEmulator(running.serial) },
+          {
+            label: '$(debug-stop) Stop',
+            description: running.serial,
+            detail: owned ? 'Launched here; also stops when this window closes' : 'Started outside VS Code',
+            run: async () => {
+              await killEmulator(running.serial);
+              this.emulators.forget(avd);
+            },
+          },
         );
       } else {
         items.push(
@@ -416,7 +426,7 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
   async launch(avd: string, coldBoot: boolean): Promise<void> {
     const running = this.tracker.devices.find((d) => d.avd === avd);
     if (running) return this.selectDevice(running.serial);
-    launchAvd(avd, { coldBoot });
+    this.emulators.launch(avd, { coldBoot });
     this.bootingAvd = avd;
     this.detach();
     this.setStatus({ kind: 'booting', avd });

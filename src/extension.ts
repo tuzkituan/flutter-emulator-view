@@ -1,13 +1,15 @@
 import * as vscode from 'vscode';
 import { DeviceTracker } from './adb';
 import { DeviceViewProvider } from './deviceView';
+import { EmulatorOwner } from './emulator';
 import { FlutterSessions } from './flutter';
 
 export function activate(context: vscode.ExtensionContext): void {
   const log = vscode.window.createOutputChannel('Flutter Emulator View');
   const tracker = new DeviceTracker(log);
   const flutter = new FlutterSessions();
-  const provider = new DeviceViewProvider(context, tracker, flutter, log);
+  const emulators = new EmulatorOwner(context.workspaceState, tracker, log);
+  const provider = new DeviceViewProvider(context, tracker, emulators, flutter, log);
 
   const command = (id: string, run: () => unknown) =>
     vscode.commands.registerCommand(`flutterEmulatorView.${id}`, async () => {
@@ -25,6 +27,8 @@ export function activate(context: vscode.ExtensionContext): void {
     tracker,
     flutter,
     provider,
+    // Owned emulators are shut down when the window closes; see EmulatorOwner.
+    emulators,
     vscode.window.registerWebviewViewProvider(DeviceViewProvider.viewId, provider, {
       // The decoder and canvas live in the webview; rebuilding them on every hide would drop
       // the stream until the next key frame.
