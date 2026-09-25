@@ -1,6 +1,6 @@
 # Flutter Emulator View
 
-Shows an Android emulator or a USB/Wi-Fi phone inside a VS Code side bar, with:
+Shows an Android emulator or a USB/Wi-Fi phone in VS Code's right-hand (secondary) side bar, with:
 
 - **Live screen**: H.264 over [scrcpy](https://github.com/Genymobile/scrcpy), decoded with WebCodecs, at up to 60 fps.
 - **Touch and keyboard**: click or drag = finger, wheel = scroll, right-click = back, middle-click = home. Typing goes
@@ -20,6 +20,7 @@ Shows an Android emulator or a USB/Wi-Fi phone inside a VS Code side bar, with:
 
 ## Requirements
 
+- **VS Code 1.106 or newer**, the first release that lets extensions add views to the secondary side bar.
 - **scrcpy** installed (`sudo apt install scrcpy`, `brew install scrcpy`, or the Windows zip). Only its
   `scrcpy-server` file is used. The version is read from `scrcpy --version`.
 - **Android SDK** with platform-tools and, for emulators, the emulator package. It is found from the
@@ -42,8 +43,10 @@ code --install-extension flutter-emulator-view-0.1.0.vsix
 If the `code` command is not on your PATH, install the file from inside VS Code instead: open the Extensions view
 (`Ctrl+Shift+X`), open the `…` menu at the top, choose **Install from VSIX…**, and pick the file.
 
-Then reload VS Code. A **Device** icon appears in the activity bar. With an emulator or phone connected it starts
-mirroring; otherwise it lists your AVDs so you can launch one.
+Then reload VS Code. **Device** opens in the secondary side bar on the right (toggle it with `Ctrl+Alt+B`, or
+`Cmd+Alt+B` on macOS). With an emulator or phone connected it starts mirroring; otherwise it lists your AVDs so you
+can launch one. You can drag it to the left side bar or the panel like any view; if an earlier install left it on the
+left, run **View: Reset View Locations** to bring it back.
 
 To update, pull, run `npm run package` again and reinstall the new `.vsix`. To remove the extension, run
 `code --uninstall-extension tuzkituan.flutter-emulator-view`, or uninstall it from the Extensions view.
@@ -62,7 +65,7 @@ npm run package      # flutter-emulator-view-<version>.vsix
 ```
 
 To try changes without installing, press **F5** in this folder. That opens an Extension Development Host with the
-extension loaded; then open the **Device** icon in the activity bar.
+extension loaded; **Device** is in the secondary side bar on the right.
 
 ## How it works
 
