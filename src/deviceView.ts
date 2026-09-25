@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Device, DeviceTracker, deviceLabel } from './adb';
 import { Recording, captureScreenshot, saveScreenshot } from './capture';
 import { EmulatorOwner, killEmulator, listAvds, waitForBoot } from './emulator';
-import { FlutterSessions, runFlutterAction, runFlutterApp } from './flutter';
+import { FrameworkHost } from './frameworks/host';
 import { DeviceSummary, FramePoint, HostMessage, NavKey, ToolbarAction, ViewStatus, WebviewMessage } from './messages';
 import {
   KeyAction,
@@ -18,7 +18,7 @@ import {
 import { MissingScrcpyError, ScrcpySession } from './scrcpy/server';
 import { resolveEmulatorPath } from './sdk';
 
-const SELECTED_KEY = 'flutterEmulatorView.selectedSerial';
+const SELECTED_KEY = 'loupe.selectedSerial';
 
 const NAV_KEYCODES: Partial<Record<NavKey, number>> = {
   back: 4,
@@ -33,7 +33,7 @@ const NAV_KEYCODES: Partial<Record<NavKey, number>> = {
 const MAX_IN_FLIGHT = 24;
 
 export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  static readonly viewId = 'flutterEmulatorView.device';
+  static readonly viewId = 'loupe.device';
 
   private view: vscode.WebviewView | undefined;
   private session: ScrcpySession | undefined;
@@ -52,16 +52,16 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
     private readonly context: vscode.ExtensionContext,
     private readonly tracker: DeviceTracker,
     private readonly emulators: EmulatorOwner,
-    private readonly flutter: FlutterSessions,
+    private readonly frameworks: FrameworkHost,
     private readonly log: vscode.OutputChannel,
   ) {
     this.selected = context.workspaceState.get<string>(SELECTED_KEY);
     this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
-    this.statusBar.command = 'flutterEmulatorView.selectDevice';
+    this.statusBar.command = 'loupe.selectDevice';
     this.subscriptions.push(
       this.statusBar,
       tracker.onDidChange(() => this.onDevicesChanged()),
-      flutter.onDidChange((running) => this.post({ type: 'flutter', running })),
+      frameworks.onDidChange((state) => this.post({ type: 'framework', ...state })),
     );
   }
 
@@ -161,6 +161,7 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
       }
       this.session = session;
       this.attaching = undefined;
+      void this.frameworks.adapter?.onDeviceAttached?.(device.serial);
       this.inFlight = 0;
       this.waitingForKeyFrame = true;
       this.updateStatusBar(label);
@@ -245,7 +246,7 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
         case 'ready':
           this.postDevices();
           this.post({ type: 'status', status: this.status });
-          this.post({ type: 'flutter', running: this.flutter.running });
+          this.post({ type: 'framework', ...this.frameworks.state });
           this.post({ type: 'recording', active: !!this.recording });
           this.waitingForKeyFrame = true;
           this.session?.send(resetVideo());
@@ -311,13 +312,14 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
 
   async runAction(action: ToolbarAction): Promise<void> {
     switch (action) {
-      case 'hotReload':
-      case 'hotRestart':
+      case 'reload':
+      case 'restart':
       case 'stop':
       case 'devTools':
-        return runFlutterAction(action);
+      case 'devMenu':
+        return this.requireFramework().action(action, this.session?.serial);
       case 'run':
-        return runFlutterApp(this.requireSerial());
+        return this.requireFramework().run(this.requireSerial());
       case 'screenshot':
         return this.screenshot();
       case 'copyScreenshot':
@@ -329,9 +331,15 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
       case 'reconnect':
         return this.reconnect();
       case 'openSettings':
-        await vscode.commands.executeCommand('workbench.action.openSettings', 'flutterEmulatorView');
+        await vscode.commands.executeCommand('workbench.action.openSettings', 'loupe');
         return;
     }
+  }
+
+  private requireFramework() {
+    const adapter = this.frameworks.adapter;
+    if (!adapter) throw new Error('Open a Flutter or React Native project to use the run controls.');
+    return adapter;
   }
 
   private requireSerial(): string {
@@ -382,7 +390,7 @@ export class DeviceViewProvider implements vscode.WebviewViewProvider, vscode.Di
   async manageEmulators(): Promise<void> {
     if (!resolveEmulatorPath()) {
       const choice = await vscode.window.showErrorMessage(
-        'The Android emulator was not found. Set flutterEmulatorView.sdkPath to your Android SDK folder.',
+        'The Android emulator was not found. Set loupe.sdkPath to your Android SDK folder.',
         'Open Settings',
       );
       if (choice) await this.runAction('openSettings');

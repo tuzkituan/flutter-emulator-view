@@ -23,7 +23,7 @@ export async function saveScreenshot(serial: string): Promise<vscode.Uri> {
 
 /** Wraps `screenrecord`, which stops on SIGINT and caps itself at 3 minutes. */
 export class Recording {
-  private readonly remote = `/sdcard/flutter-emulator-view-${timestamp()}.mp4`;
+  private readonly remote = `/sdcard/loupe-${timestamp()}.mp4`;
   private readonly process: ChildProcess;
   private readonly exited: Promise<void>;
 

@@ -19,7 +19,8 @@ export type ViewStatus =
 export type HostMessage =
   | { type: 'status'; status: ViewStatus }
   | { type: 'devices'; devices: DeviceSummary[]; selected: string | undefined }
-  | { type: 'flutter'; running: boolean }
+  /** Which run-loop buttons to show; undefined hides them (no Flutter or React Native project). */
+  | { type: 'framework'; id: 'flutter' | 'reactNative' | undefined; running: boolean }
   | { type: 'recording'; active: boolean }
   | { type: 'packet'; key: boolean; hasConfig: boolean; data: Uint8Array }
   | { type: 'clipboardImage'; png: Uint8Array };
@@ -27,10 +28,11 @@ export type HostMessage =
 export type NavKey = 'back' | 'home' | 'recents' | 'power' | 'volumeDown' | 'volumeUp' | 'rotate' | 'notifications';
 
 export type ToolbarAction =
-  | 'hotReload'
-  | 'hotRestart'
+  | 'reload'
+  | 'restart'
   | 'stop'
   | 'devTools'
+  | 'devMenu'
   | 'run'
   | 'screenshot'
   | 'copyScreenshot'

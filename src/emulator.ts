@@ -22,7 +22,7 @@ interface OwnedEmulator {
   pid: number;
 }
 
-const OWNED_KEY = 'flutterEmulatorView.ownedEmulators';
+const OWNED_KEY = 'loupe.ownedEmulators';
 
 /**
  * Emulators launched from the view run headless and belong to this window: closing it shuts
@@ -44,7 +44,7 @@ export class EmulatorOwner implements vscode.Disposable {
 
   launch(avd: string, options: { coldBoot?: boolean } = {}): void {
     const emulator = resolveEmulatorPath();
-    if (!emulator) throw new Error('The Android emulator was not found. Set flutterEmulatorView.sdkPath to your Android SDK.');
+    if (!emulator) throw new Error('The Android emulator was not found. Set loupe.sdkPath to your Android SDK.');
     const args = ['-avd', avd, '-no-window'];
     if (options.coldBoot) args.push('-no-snapshot-load');
     // Detached so a VS Code crash cannot take the emulator down mid-write; dispose() stops it.

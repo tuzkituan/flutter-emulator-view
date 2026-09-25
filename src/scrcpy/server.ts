@@ -6,7 +6,7 @@ import { parseForwardPort, parseScrcpyVersion } from '../adbProtocol';
 import { config, resolveScrcpyServerPath } from '../sdk';
 import { CODEC_ID_H264, ConfigMerger, DecodablePacket, VideoStreamParser } from './stream';
 
-const DEVICE_SERVER_PATH = '/data/local/tmp/flutter-emulator-view-server.jar';
+const DEVICE_SERVER_PATH = '/data/local/tmp/loupe-server.jar';
 
 export interface SessionListener {
   onDeviceName(name: string): void;
@@ -47,7 +47,7 @@ export class ScrcpySession {
     const serverFile = resolveScrcpyServerPath();
     if (!serverFile) {
       throw new MissingScrcpyError(
-        'scrcpy-server was not found. Install scrcpy (for example `sudo apt install scrcpy` or `brew install scrcpy`), or set flutterEmulatorView.scrcpyServerPath.',
+        'scrcpy-server was not found. Install scrcpy (for example `sudo apt install scrcpy` or `brew install scrcpy`), or set loupe.scrcpyServerPath.',
       );
     }
     const version = await resolveScrcpyVersion();
@@ -170,7 +170,7 @@ async function resolveScrcpyVersion(): Promise<string> {
   const version = parseScrcpyVersion(stdout);
   if (!version) {
     throw new MissingScrcpyError(
-      'Could not read the scrcpy version from `scrcpy --version`. Set flutterEmulatorView.scrcpyVersion to the exact version of your scrcpy-server file.',
+      'Could not read the scrcpy version from `scrcpy --version`. Set loupe.scrcpyVersion to the exact version of your scrcpy-server file.',
     );
   }
   cachedVersion = version;

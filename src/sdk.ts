@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 const exe = (name: string) => (process.platform === 'win32' ? `${name}.exe` : name);
 
 export function config(): vscode.WorkspaceConfiguration {
-  return vscode.workspace.getConfiguration('flutterEmulatorView');
+  return vscode.workspace.getConfiguration('loupe');
 }
 
 /** Setting → ANDROID_HOME → ANDROID_SDK_ROOT → the Android Studio default for this OS. */

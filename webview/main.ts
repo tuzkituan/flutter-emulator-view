@@ -37,19 +37,38 @@ const nav = (key: NavKey) => () => send({ type: 'nav', key });
 const deviceSelect = el('select', { title: 'Device to mirror' });
 deviceSelect.addEventListener('change', () => send({ type: 'selectDevice', serial: deviceSelect.value }));
 
-const runButton = iconButton('debug-start', 'Run Flutter app on this device', action('run'));
-const flutterButtons = [
-  iconButton('flame', 'Hot reload', action('hotReload')),
-  iconButton('debug-restart', 'Hot restart', action('hotRestart')),
-  iconButton('debug-stop', 'Stop', action('stop')),
-  iconButton('dashboard', 'Open DevTools', action('devTools')),
-];
+// One run-loop group per framework; the host says which one applies to the open project.
+// Run is hidden while a Flutter session exists, but stays for React Native, where it also
+// rebuilds and reinstalls the native app.
+const frameworkGroups = {
+  flutter: {
+    run: iconButton('debug-start', 'Run the Flutter app on this device', action('run')),
+    live: [
+      iconButton('flame', 'Hot reload', action('reload')),
+      iconButton('debug-restart', 'Hot restart', action('restart')),
+      iconButton('debug-stop', 'Stop', action('stop')),
+      iconButton('dashboard', 'Open DevTools', action('devTools')),
+    ],
+  },
+  reactNative: {
+    run: iconButton('debug-start', 'Build and run the app on this device', action('run')),
+    live: [
+      iconButton('refresh', 'Reload JS', action('reload')),
+      iconButton('menu', 'Open the dev menu', action('devMenu')),
+      iconButton('debug-stop', 'Stop Metro', action('stop')),
+      iconButton('dashboard', 'Open React Native DevTools', action('devTools')),
+    ],
+  },
+};
+const flutterGroup = el('div', { className: 'group' }, frameworkGroups.flutter.run, ...frameworkGroups.flutter.live);
+const reactNativeGroup = el('div', { className: 'group' }, frameworkGroups.reactNative.run, ...frameworkGroups.reactNative.live);
 const recordButton = iconButton('record', 'Start screen recording', action('record'));
 
 const toolbar = el(
   'div',
   { className: 'toolbar' },
-  el('div', { className: 'group' }, runButton, ...flutterButtons),
+  flutterGroup,
+  reactNativeGroup,
   el('div', { className: 'spacer' }),
   el(
     'div',
@@ -258,9 +277,13 @@ function renderStatus(status: ViewStatus): void {
   }
 }
 
-function setFlutterRunning(running: boolean): void {
-  runButton.classList.toggle('hidden', running);
-  for (const b of flutterButtons) b.disabled = !running;
+function setFramework(id: 'flutter' | 'reactNative' | undefined, running: boolean): void {
+  flutterGroup.classList.toggle('hidden', id !== 'flutter');
+  reactNativeGroup.classList.toggle('hidden', id !== 'reactNative');
+  frameworkGroups.flutter.run.classList.toggle('hidden', running);
+  for (const group of Object.values(frameworkGroups)) {
+    for (const b of group.live) b.disabled = !running;
+  }
 }
 
 function setRecording(active: boolean): void {
@@ -289,8 +312,8 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
     case 'devices':
       renderDevices(message.devices, message.selected);
       break;
-    case 'flutter':
-      setFlutterRunning(message.running);
+    case 'framework':
+      setFramework(message.id, message.running);
       break;
     case 'recording':
       setRecording(message.active);
@@ -301,6 +324,6 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
   }
 });
 
-setFlutterRunning(false);
+setFramework(undefined, false);
 renderStatus({ kind: 'noDevice', avds: [], emulatorAvailable: true });
 send({ type: 'ready' });
