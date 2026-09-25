@@ -1,0 +1,179 @@
+{
+  "name": "flutter-emulator-view",
+  "displayName": "Flutter Emulator View",
+  "description": "Mirror an Android emulator or phone inside VS Code, with touch input, device buttons and Flutter hot reload controls.",
+  "version": "0.1.0",
+  "publisher": "tuzkituan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuzkituan/flutter-emulator-view.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tuzkituan/flutter-emulator-view/issues"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "flutter",
+    "android",
+    "emulator",
+    "scrcpy",
+    "mirror"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onView:flutterEmulatorView.device"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "flutterEmulatorView",
+          "title": "Device",
+          "icon": "media/device.svg"
+        }
+      ]
+    },
+    "views": {
+      "flutterEmulatorView": [
+        {
+          "type": "webview",
+          "id": "flutterEmulatorView.device",
+          "name": "Device"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "flutterEmulatorView.selectDevice",
+        "title": "Select Device",
+        "category": "Flutter Emulator View",
+        "icon": "$(device-mobile)"
+      },
+      {
+        "command": "flutterEmulatorView.manageEmulators",
+        "title": "Start or Stop an Emulator",
+        "category": "Flutter Emulator View",
+        "icon": "$(vm)"
+      },
+      {
+        "command": "flutterEmulatorView.reconnect",
+        "title": "Reconnect Mirror",
+        "category": "Flutter Emulator View",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "flutterEmulatorView.screenshot",
+        "title": "Save Screenshot",
+        "category": "Flutter Emulator View",
+        "icon": "$(device-camera)"
+      },
+      {
+        "command": "flutterEmulatorView.copyScreenshot",
+        "title": "Copy Screenshot to Clipboard",
+        "category": "Flutter Emulator View"
+      },
+      {
+        "command": "flutterEmulatorView.toggleRecording",
+        "title": "Start or Stop Screen Recording",
+        "category": "Flutter Emulator View",
+        "icon": "$(record)"
+      },
+      {
+        "command": "flutterEmulatorView.runFlutter",
+        "title": "Run Flutter App on Mirrored Device",
+        "category": "Flutter Emulator View",
+        "icon": "$(debug-start)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "flutterEmulatorView.selectDevice",
+          "when": "view == flutterEmulatorView.device",
+          "group": "navigation@1"
+        },
+        {
+          "command": "flutterEmulatorView.manageEmulators",
+          "when": "view == flutterEmulatorView.device",
+          "group": "navigation@2"
+        },
+        {
+          "command": "flutterEmulatorView.reconnect",
+          "when": "view == flutterEmulatorView.device",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Flutter Emulator View",
+      "properties": {
+        "flutterEmulatorView.sdkPath": {
+          "type": "string",
+          "default": "",
+          "description": "Android SDK folder. When empty: ANDROID_HOME, then ANDROID_SDK_ROOT, then ~/Android/Sdk (Linux), ~/Library/Android/sdk (macOS) or %LOCALAPPDATA%\\Android\\Sdk (Windows)."
+        },
+        "flutterEmulatorView.adbPath": {
+          "type": "string",
+          "default": "",
+          "description": "adb executable. When empty: <sdk>/platform-tools/adb, then adb on PATH. Using the SDK copy keeps it the same version Flutter uses, so the two do not restart each other's adb server."
+        },
+        "flutterEmulatorView.scrcpyServerPath": {
+          "type": "string",
+          "default": "",
+          "description": "scrcpy-server file. When empty it is looked up next to the scrcpy install (for example /usr/share/scrcpy/scrcpy-server)."
+        },
+        "flutterEmulatorView.scrcpyVersion": {
+          "type": "string",
+          "default": "",
+          "description": "Version of the scrcpy-server file. It must match the file exactly. When empty it is read from `scrcpy --version`."
+        },
+        "flutterEmulatorView.maxSize": {
+          "type": "number",
+          "default": 1280,
+          "minimum": 0,
+          "description": "Longest side of the mirrored video in pixels. 0 streams at the device's full resolution."
+        },
+        "flutterEmulatorView.maxFps": {
+          "type": "number",
+          "default": 60,
+          "minimum": 1,
+          "description": "Frame-rate cap for the mirrored video."
+        },
+        "flutterEmulatorView.bitRate": {
+          "type": "number",
+          "default": 8000000,
+          "description": "Video bit rate in bits per second."
+        },
+        "flutterEmulatorView.captureFolder": {
+          "type": "string",
+          "default": ".screenshots",
+          "description": "Folder for screenshots and recordings, relative to the first workspace folder (or absolute)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p webview",
+    "test": "vitest run",
+    "package": "npm run build -- --production && vsce package --no-dependencies",
+    "vscode:prepublish": "npm run build -- --production"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/codicons": "^0.0.36",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
