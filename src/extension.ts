@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { DeviceTracker } from './adb';
 import { DeviceViewProvider } from './deviceView';
 import { EmulatorOwner } from './emulator';
-import { FlutterSessions } from './flutter';
+import { FlutterSessions, isFlutterProject } from './flutter';
+import { config } from './sdk';
 
 export function activate(context: vscode.ExtensionContext): void {
   const log = vscode.window.createOutputChannel('Flutter Emulator View');
@@ -42,6 +43,20 @@ export function activate(context: vscode.ExtensionContext): void {
     command('toggleRecording', () => provider.toggleRecording()),
     command('runFlutter', () => provider.runAction('run')),
   );
+
+  revealForFlutterProject().catch((error) => log.appendLine(`[startup] could not open the Device view: ${error}`));
+}
+
+/**
+ * Shows the Device view when a Flutter project opens. Focusing is the only reliable way to
+ * reveal a view (`.open` toggles it), so focus goes back to the editor afterwards.
+ */
+async function revealForFlutterProject(): Promise<void> {
+  if (!config().get<boolean>('openOnFlutterProject', true)) return;
+  if (!(vscode.workspace.workspaceFolders ?? []).some(isFlutterProject)) return;
+  const hadEditor = !!vscode.window.activeTextEditor;
+  await vscode.commands.executeCommand(`${DeviceViewProvider.viewId}.focus`);
+  if (hadEditor) await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
 }
 
 export function deactivate(): void {

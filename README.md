@@ -43,8 +43,10 @@ code --install-extension flutter-emulator-view-0.1.0.vsix
 If the `code` command is not on your PATH, install the file from inside VS Code instead: open the Extensions view
 (`Ctrl+Shift+X`), open the `…` menu at the top, choose **Install from VSIX…**, and pick the file.
 
-Then reload VS Code. **Device** opens in the secondary side bar on the right (toggle it with `Ctrl+Alt+B`, or
-`Cmd+Alt+B` on macOS). With an emulator or phone connected it starts mirroring; otherwise it lists your AVDs so you
+Then reload VS Code. **Device** lives in the secondary side bar on the right and opens by itself whenever you open
+a Flutter project (turn that off with `flutterEmulatorView.openOnFlutterProject`). Otherwise open it with
+`Ctrl+Alt+B` (`Cmd+Alt+B` on macOS), the side-bar toggle at the top right of the window, or **Device: Focus on
+Device View** in the Command Palette. With an emulator or phone connected it starts mirroring; otherwise it lists your AVDs so you
 can launch one. You can drag it to the left side bar or the panel like any view; if an earlier install left it on the
 left, run **View: Reset View Locations** to bring it back.
 

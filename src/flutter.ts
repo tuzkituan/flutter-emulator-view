@@ -80,5 +80,15 @@ export async function runFlutterApp(serial: string): Promise<void> {
 
 function flutterWorkspaceFolder(): vscode.WorkspaceFolder | undefined {
   const folders = vscode.workspace.workspaceFolders ?? [];
-  return folders.find((f) => fs.existsSync(path.join(f.uri.fsPath, 'pubspec.yaml'))) ?? folders[0];
+  return folders.find(isFlutterProject) ?? folders.find((f) => fs.existsSync(path.join(f.uri.fsPath, 'pubspec.yaml'))) ?? folders[0];
+}
+
+/** A pubspec that depends on the Flutter SDK; a plain Dart package does not count. */
+export function isFlutterProject(folder: vscode.WorkspaceFolder): boolean {
+  try {
+    const pubspec = fs.readFileSync(path.join(folder.uri.fsPath, 'pubspec.yaml'), 'utf8');
+    return /^\s+sdk:\s*flutter\s*$/m.test(pubspec);
+  } catch {
+    return false; // no pubspec.yaml in this folder
+  }
 }

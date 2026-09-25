@@ -28,7 +28,8 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onView:flutterEmulatorView.device"
+    "onView:flutterEmulatorView.device",
+    "workspaceContains:pubspec.yaml"
   ],
   "contributes": {
     "viewsContainers": {
@@ -114,6 +115,11 @@
     "configuration": {
       "title": "Flutter Emulator View",
       "properties": {
+        "flutterEmulatorView.openOnFlutterProject": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the Device view in the secondary side bar when a Flutter project (a pubspec.yaml that depends on the Flutter SDK) is opened."
+        },
         "flutterEmulatorView.sdkPath": {
           "type": "string",
           "default": "",
