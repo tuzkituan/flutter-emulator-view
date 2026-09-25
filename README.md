@@ -9,7 +9,13 @@ Shows an Android emulator or a USB/Wi-Fi phone inside a VS Code side bar, with:
   debug session, so they work the same as F5.
 - **Device buttons**: back, home, recents, notifications, volume, rotate, power.
 - **Emulators**: when nothing is connected, the view lists your AVDs with *Launch* and *Cold boot* buttons. The
-  toolbar's emulator button can start, mirror or stop any of them at any time.
+  toolbar's emulator button can start, mirror or stop any of them at any time. An emulator launched here runs with
+  no window of its own (the side bar is its screen) and shuts down when the VS Code window closes. Emulators you
+  started elsewhere, such as Android Studio or `flutter emulators --launch`, are mirrored but never stopped.
+
+  Two side effects: *Developer: Reload Window* also stops an emulator launched here (the next launch resumes from
+  the quick-boot snapshot in a few seconds), and with several VS Code windows open, an emulator belongs to the
+  window that launched it.
 - **Capture**: save a screenshot, copy it to the clipboard, and record the screen to MP4.
 
 ## Requirements
@@ -19,6 +25,31 @@ Shows an Android emulator or a USB/Wi-Fi phone inside a VS Code side bar, with:
 - **Android SDK** with platform-tools and, for emulators, the emulator package. It is found from the
   `flutterEmulatorView.sdkPath` setting, then `ANDROID_HOME`, then `ANDROID_SDK_ROOT`, then the Android Studio default location.
 - **Dart and Flutter extensions** (Dart-Code), for the Flutter buttons.
+
+## Install
+
+The extension is not on the Marketplace, so you build a `.vsix` package and install that file. You need Node.js 20 or
+newer.
+
+```bash
+git clone https://github.com/tuzkituan/flutter-emulator-view.git
+cd flutter-emulator-view
+npm install
+npm run package
+code --install-extension flutter-emulator-view-0.1.0.vsix
+```
+
+If the `code` command is not on your PATH, install the file from inside VS Code instead: open the Extensions view
+(`Ctrl+Shift+X`), open the `…` menu at the top, choose **Install from VSIX…**, and pick the file.
+
+Then reload VS Code. A **Device** icon appears in the activity bar. With an emulator or phone connected it starts
+mirroring; otherwise it lists your AVDs so you can launch one.
+
+To update, pull, run `npm run package` again and reinstall the new `.vsix`. To remove the extension, run
+`code --uninstall-extension tuzkituan.flutter-emulator-view`, or uninstall it from the Extensions view.
+
+If the view reports that it can't find scrcpy or the Android SDK, set `flutterEmulatorView.scrcpyServerPath` or
+`flutterEmulatorView.sdkPath` in Settings.
 
 ## Development
 
@@ -30,8 +61,8 @@ npm test             # protocol parsers and serializers
 npm run package      # flutter-emulator-view-<version>.vsix
 ```
 
-To try it, press **F5** in this folder to open an Extension Development Host, then open the **Device** icon in the
-activity bar. Install the packaged build with `code --install-extension flutter-emulator-view-0.1.0.vsix`.
+To try changes without installing, press **F5** in this folder. That opens an Extension Development Host with the
+extension loaded; then open the **Device** icon in the activity bar.
 
 ## How it works
 
